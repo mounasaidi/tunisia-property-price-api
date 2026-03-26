@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 
 from src.data_loader import load_data
-from src.preprocessing import feature_engineering, encode_features
+from src.preprocessing import feature_engineering, encode_features, compute_features
 from src.training import train_models
 from src.evaluation import evaluate_model
 
@@ -16,7 +16,7 @@ from src.evaluation import evaluate_model
 # =========================
 # 1. LOAD DATA
 # =========================
-df = load_data("data/mubawab_clean_pro1_80.csv")
+df = load_data("data/modifie.csv")
 print(f"✅ Dataset chargé : {df.shape}")
 print(df['type'].value_counts())
 print(df['category'].value_counts())
@@ -30,11 +30,11 @@ print(f"\n✅ Après feature engineering : {df.shape}")
 # =========================
 # 3. SPLIT PAR TYPE
 # =========================
-df_louer  = df[df['type'] == 'À Louer']
-df_vendre = df[df['type'] == 'À Vendre']
+df_louer  = df[df['type'] == 'louer']
+df_vendre = df[df['type'] == 'vendre']
 
-print(f"\n  À Louer  : {len(df_louer)} lignes")
-print(f"  À Vendre : {len(df_vendre)} lignes")
+print(f"\n  louer  : {len(df_louer)} lignes")
+print(f"  vendre : {len(df_vendre)} lignes")
 
 
 # =========================
@@ -96,25 +96,23 @@ def train_pipeline(data, label):
 
     # Save
     os.makedirs("models", exist_ok=True)
-    tag = label.replace(' ', '_')
+    joblib.dump(best_model, f"models/model_{label}.pkl")
+    joblib.dump(scaler,     f"models/scaler_{label}.pkl")
+    joblib.dump(encoder,    f"models/encoder_{label}.pkl")
 
-    joblib.dump(best_model, f"models/model_{tag}.pkl")
-    joblib.dump(scaler,     f"models/scaler_{tag}.pkl")
-    joblib.dump(encoder,    f"models/encoder_{tag}.pkl")
-
-    print(f"\n✅ Modèles sauvegardés dans models/")
+    print(f"✅ Modèles sauvegardés dans models/")
     return best_model, scaler, encoder
 
 
 # =========================
 # 5. TRAIN
 # =========================
-model_louer,  scaler_louer,  encoder_louer  = train_pipeline(df_louer,  "À_Louer")
-model_vendre, scaler_vendre, encoder_vendre = train_pipeline(df_vendre, "À_Vendre")
+model_louer,  scaler_louer,  encoder_louer  = train_pipeline(df_louer,  "louer")
+model_vendre, scaler_vendre, encoder_vendre = train_pipeline(df_vendre, "vendre")
 
 
 # =========================
-# 6. FONCTION DE PRÉDICTION
+# 6. FONCTION DE PRÉDICTION (test local)
 # =========================
 def predict_price(model, scaler, encoder, sample_df):
     sample_df = sample_df.copy()
@@ -146,10 +144,12 @@ sample_vendre = df_vendre.sample(5, random_state=1)
 pred_louer  = predict_price(model_louer,  scaler_louer,  encoder_louer,  sample_louer)
 pred_vendre = predict_price(model_vendre, scaler_vendre, encoder_vendre, sample_vendre)
 
-print("\n📍 À Louer — Prix réels vs prédits (DT/mois) :")
+print("\n📍 louer — Prix réels vs prédits (DT/mois) :")
 for real, pred in zip(sample_louer['price'].values, pred_louer):
-    print(f"  Réel : {real:>10,.0f} DT  |  Prédit : {pred:>10,.0f} DT")
+    diff = abs(real - pred) / real * 100
+    print(f"  Réel : {real:>10,.0f} DT  |  Prédit : {pred:>10,.0f} DT  |  Écart : {diff:.1f}%")
 
-print("\n📍 À Vendre — Prix réels vs prédits (DT) :")
+print("\n📍 vendre — Prix réels vs prédits (DT) :")
 for real, pred in zip(sample_vendre['price'].values, pred_vendre):
-    print(f"  Réel : {real:>10,.0f} DT  |  Prédit : {pred:>10,.0f} DT")
+    diff = abs(real - pred) / real * 100
+    print(f"  Réel : {real:>10,.0f} DT  |  Prédit : {pred:>10,.0f} DT  |  Écart : {diff:.1f}%")

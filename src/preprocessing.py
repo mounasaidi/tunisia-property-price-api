@@ -16,7 +16,7 @@ def feature_engineering(df):
     # ========================
     # Features dérivées
     # ========================
-    df['price_per_m2']    = df['price'] / df['size']
+    df['price_per_m2']   = df['price'] / df['size']
     df['room_size_ratio'] = df['rooms'] / df['size']
     df['bathroom_ratio']  = df['bathrooms'] / df['rooms']
     df['size_per_room']   = df['size'] / df['rooms']
@@ -33,6 +33,25 @@ def feature_engineering(df):
     df = df.dropna()
 
     return df
+
+
+def compute_features(size: float, rooms: float, bathrooms: float) -> dict:
+    """
+    Calcule les features dérivées à partir des inputs bruts.
+    Utilisé à la fois dans main.py (test) et app.py (API).
+    Fonction centrale — modifier ici se répercute partout.
+    """
+    return {
+        "size"            : size,
+        "rooms"           : rooms,
+        "bathrooms"       : bathrooms,
+        "price_per_m2"    : 0,              # inconnu à la prédiction
+        "room_size_ratio" : rooms / size,
+        "bathroom_ratio"  : bathrooms / rooms,
+        "size_per_room"   : size / rooms,
+        "bath_per_room"   : bathrooms / rooms,
+        "room_density"    : rooms / size,
+    }
 
 
 def encode_features(train_df, test_df):
