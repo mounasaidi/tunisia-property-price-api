@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
@@ -13,6 +14,16 @@ app = FastAPI(
     title="Tunisia Property Price API",
     description="Estimation du prix des propriétés en Tunisie",
     version="2.0.0"
+)
+
+# =========================
+# CORS — obligatoire pour Salesforce LWC
+# =========================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 # =========================
